@@ -6,15 +6,15 @@
 
 usage()
 {
-	echo "Usage :: $0 [options...] [init|new|build]					" 
+	echo "Usage :: $0 [init|new|build] [options...]					" 
 	echo
 	echo "OPTIONS									"
 	echo "		statim -h			Display usage info.		"	
 	echo
 	echo "SUBCOMMANDS								"
 	echo "		statim ls								Display available templates	"
-	echo "		statim init  <blog-dir-name> [-d] <target-dir> [-t] <template-name>	set up new blog directory.	"
-	echo "		statim new  <new-post-name>						create new blog post		"
+	echo "		statim init  [-d] <target-dir> [-t] <template-name> <blog-dir-name>	set up new blog directory.	"
+	echo "		statim new   [-d] <path-to-project-dir> [-t] <tags in a string> <new-post-name>			create new blog post		"
 	echo "		build									build and commit changes	"
 	echo
 	echo
@@ -31,7 +31,6 @@ templates()
 	echo
 	echo "$(ls $template_path)"
 	echo
-
 }
 
 ##############################
@@ -43,6 +42,7 @@ dirsetup()
 	local dir_path=$1/$2
 	echo "Initializing project at "$dir_path
 	mkdir -p $dir_path/src
+	mkdir $dir_path/src/.tags
 	mkdir $dir_path/build
 	mkdir $dir_path/assets
 }
@@ -68,9 +68,145 @@ filesetup()
 	cp -vR $template_path/js/   $dir_path/assets/js
 	echo "js resources done"
 	cp -vR $template_path/html/index.html $dir_path/index.html
+	echo "PROJ_NAME="$2 > $dir_path/meta.dat
+	echo "TEMPLATE="$3 >> $dir_path/meta.dat
+	echo "Enter your name and press [ENTER]  :: "
+	read author
+	echo "AUTHOR=\""$author"\"" >> $dir_path/meta.dat
+	echo "POST_COUNT=0" >> $dir_path/meta.dat
+	git init $dir_path
+	cd $dir_path
+	git add assets
+	git add build
+	git add index.html
+	git add meta.dat
 	echo "Init complete"
 }
 
+########################################
+## Set up directory and meta for post ##
+########################################
+
+postsetup()
+{
+	local proj_dir=$1
+	local post_name=$2
+	source $proj_dir/meta.dat
+	if [ -d $proj_dir/$post_name ]; then
+		echo "Existing file name" 
+		exit 1
+	fi
+	mkdir $proj_dir/src/$post_name
+	mkdir $proj_dir/src/$post_name/img
+	cp -v $statim_dir/templates/$TEMPLATE/example.md $proj_dir/src/$post_name/$post_name.md
+	#cp -v $statim_dir/templates/$TEMPLATE/html/post.html $proj_dir/src/$post_name/$post_name.html
+	gawk -i inplace 'BEGIN {FS="="}
+	{ if ( $1 == "POST_COUNT" ) print "POST_COUNT="$2+1 
+	else print $0
+	}' $proj_dir/meta.dat
+	echo "post directory setup complete"
+	echo "POST_NAME="$post_name >> $proj_dir/src/$post_name/meta.dat
+	echo "DATE="`date +"%b-%d-%Y"` >> $proj_dir/src/$post_name/meta.dat
+	if [ -z $3 ];then 
+		echo $post_name >> $proj_dir/src/.tags/untagged
+		echo "TAGS=\"\"" >> $proj_dir/src/$post_name/meta.dat
+	else 
+		echo "TAGS=\""$tag_string"\"" >> $proj_dir/src/$post_name/meta.dat
+		for tag in $tag_string
+		do
+			if [ -f $proj_dir/src/.tags/$tag ];then
+				echo $post_name >> $proj_dir/src/.tags/$tag
+			else
+				echo $post_name > $proj_dir/src/.tags/$tag
+			fi
+		done
+	fi
+	echo 
+	echo "Write a one liner description for your post"
+	read desc
+	echo "DESC=\""$desc"\"" >> $proj_dir/src/$post_name/meta.dat
+	echo "post setup complete"
+	echo "post directory and meta.dat entry setup complete"
+}
+
+###########################################################
+## Build all the posts in src and populate the build dir ##
+###########################################################
+
+buildall()
+{
+	local proj_dir=$1
+	source $proj_dir/meta.dat
+	cd $proj_dir
+
+	if [ -z "$(ls -A ./build)" ];
+	then 
+		echo "First build"
+	else
+		git rm -rf ./build
+	fi
+	# Counter for which post we are on just using this for passing next and previous links
+	i=1
+	for post in $(ls -t src)
+	do
+		next_post=$(ls -t src | awk "NR==$i")
+		buildpost $proj_dir $post $next_post
+		i=$(($i+1))
+	done
+
+	# Populate the recent posts in front page
+	echo "building index page"
+	recent_posts=""
+	j=1
+	for post in $(ls -t src | head -9)
+	do
+		source $proj_dir/src/$post/meta.dat
+		echo "	creating index entry "$post
+		post_element=$(perl -s -p -e's/STATIMPOSTNAME/$name/g,s/STATIMPOSTDATE/$date/g,s/STATIMPOSTNUMBER/$num/g,s/STATIMPOSTDES/$des/g,s/STATIMPOSTTAGLIST/$tags/g' -- -name="$POST_NAME" -date="$DATE" -num="$j" -des="$DESC" -tags="$TAGS" ./assets/html/post-link.html)
+		echo "$post_element"
+		recent_posts=$recent_posts$post_element
+		j=$(($j+1))
+	done
+	git rm -f index.html
+	index_page=$(perl -s -p -e's/STATIMPOSTSGRID/$to/g' -- -to="$recent_posts" ./assets/html/index.html)
+	echo $index_page > ./index.html
+	git add ./index.html
+	echo "##### BUILD COMPLETE #####"
+	
+	
+}
+
+##########################################################################
+## Build a single post md to html conversion with pandoc and templating ##
+##########################################################################
+buildpost()
+{
+	local proj_dir=$1
+	local post_name=$2
+	local next_post=$3
+	post_dir="src/"$post_name
+	echo "Building post in project :: "$proj_dir" post :: "$post_dir
+	source $post_dir/meta.dat
+	# Convert post content from md to html
+	html_content=$(pandoc -t html $post_dir/$post_name.md)
+
+	# Generate html for tags
+	tagstring=""
+	for tag in $TAGS:
+	do 
+			tag_element=$(perl -s -p -e's/STATIMTAGNAME/$to/g' -- -to="$tag" ./assets/html/tag-link.html)
+			tagstring=$tagstring$tag_element
+	done
+	
+	# Use perl regex to fill up our template with generated content
+	built_page=$(perl -s -p -e's/STATIMTITLE/$title/g,s/STATIMPOSTCONTENT/$content/g,s/STATIMPOSTTAGLINKS/$tags/g' -- -title="$post_name" -content="$html_content" -tags="$tagstring" ./assets/html/post.html)
+	
+	mkdir build/$post_name
+	echo $built_page > ./build/$post_name/$post_name.html
+	cp -r $post_dir/img ./build/$post_name/img
+	git add ./build/$post_name
+	echo "built post :: "$post_name
+}
 
 
 #################################
@@ -110,9 +246,6 @@ case "$subcommand" in
 		;;
 
 	init )
-		if [ ! -z $1 ] ; then 
-			proj_name=$1;shift
-		fi
 		while getopts "d:t:" opt; do
 			case ${opt} in 
 				d )
@@ -136,17 +269,82 @@ case "$subcommand" in
 			esac
 		done
 		shift $((OPTIND -1))
+		if [ ! -z $1 ] ; then 
+			proj_name=$1;shift
+		fi
+		echo "project name is :: "$proj_name
 		dirsetup $dest $proj_name
 		filesetup $dest $proj_name $template
 		exit 0
 		;;
 
 	new )
+		while getopts "d:t:" opt; do
+			case ${opt} in
+				d ) 
+					dest=$OPTARG
+					echo "Project directory path specified :: "$dest
+					;;
+				t )
+					tag_string=$OPTARG
+					echo "Tagged post"
+					;;
+				\? )
+					echo "Invalid option -$OPTARG"
+					usage
+					exit 1
+					;;
+				: )
+					echo "Invalid option -$OPTARG requires argument"
+					usage
+					exit 1
+					;;
+			esac
+		done
+		shift $((OPTIND -1))
+		if [ ! -z $1 ] ; then 
+			post_name=$1;shift
+		else 
+			usage
+			exit 1
+		fi
+
+		if [  -f $dest/meta.dat ]; then
+			postsetup $dest $post_name $tag_string
+		else
+			echo "Use statim new in project directory or specify path using -d flag"
+			usage
+			exit 1
+		fi
 		exit 0
-		
 		;;
 
 	build)
+		while getopts "d:" opt; do
+			case ${opt} in
+				d ) 
+					dest=$OPTARG
+					echo "Project directory path specified :: "$dest
+					;;
+				\? )
+					echo "Invalid option -$OPTARG"
+					usage
+					exit 1
+					;;
+				: )
+					echo "Invalid option -$OPTARG requires argument"
+					usage
+					exit 1
+					;;
+			esac
+		done
+		shift $((OPTIND -1))
+		if [ -f $dest/meta.dat ]; then
+			buildall $dest
+		else 
+			usage
+			exit 1
+		fi
 		exit 0
 		;;
 	* )

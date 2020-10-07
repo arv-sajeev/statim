@@ -1,0 +1,137 @@
+
+.blog-section
+{
+	max-width: 1000px;
+	display: flex;
+	-webkit-box-pack: center;
+	justify-content: center;
+	-webkit-box-align: center;
+	flex-direction: column;
+	align-items: flex-start;
+	margin-top: 0px;
+	margin-right: auto;
+	margin-bottom: 0px;
+	margin-left: auto;
+}
+
+.blog-grid-container
+{
+	width:100%;
+	margin-top:50px;
+}
+
+.blog-grid
+{
+	display : grid;
+	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+	position:relative;
+	gap:15px;
+}
+
+.blog-post
+{
+	background-color:rgba(36,240,0,0.1);
+	border-color:green;
+	border-style: solid;
+	border-width: medium;
+	transition: all 0.7s;
+	cursor:pointer;
+}
+
+.blog-post:hover
+{
+	background-color:rgba(36,209,0,0.3);
+	border-color:white;
+	color:white;
+	transform: translateY(-7px);
+}
+
+.blog-post-inner
+{
+	display: flex;
+	-webkit-box-pack: justify;
+	justify-content: space-between;
+	-webkit-box-align: center;
+	flex-direction: column;
+	align-items: flex-start;
+	position: relative;
+	height: 100%;
+	padding: 2rem 1.75rem;
+}
+
+.blog-post-inner p
+{
+	font-size:15px;
+}
+
+.blog-post-inner h3 h2
+{
+	font-weight:bold;
+}
+
+.blog-post-inner footer
+{
+	font-size:10px;
+	font-style:oblique;
+}
+
+
+.blog-post-header
+{
+	width:100%;
+	display: flex;
+	-webkit-box-pack: justify;
+	justify-content: space-between;
+	-webkit-box-align: center;
+	align-items: center;
+	margin-bottom: 30px;
+}
+
+.blog-post-link
+{
+	margin-right: -1px;
+	transition: all 0.7s;
+}
+
+.blog-post-link:hover
+{
+	color:green;
+	transform: scale(1.5);
+}
+
+.hr-list
+{
+	display: flex;
+	align-items: flex-end;
+	-webkit-box-flex: 1;
+	flex-grow: 1;
+	flex-wrap: wrap;
+	padding: 0px;
+	margin: 20px 0px 0px;
+	list-style: none;	
+}
+
+.hr-list li
+{
+	font-family: 	"SF Mono", "Fira Code", 
+			"Fira Mono", "Roboto Mono", 
+			"Lucida Console", Monaco, monospace;
+	font-size: 12px;
+	line-height: 1.75;
+	margin-right: 15px;
+
+}
+
+
+
+@media only screen and (max-width : 48em)
+.blog-section
+{
+	padding: 100px 0px;
+}
+
+@media only screen and (max-width : 62.5em)
+.blog-grid
+{
+	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+}

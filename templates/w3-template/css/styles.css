@@ -1,0 +1,51 @@
+@import "./w3.css"
+
+body,h1,h2,h3,h4,h5,h6 {font-family: "Lato", sans-serif;}
+body, html {
+	height: 100%;
+	color: white;
+	line-height: 1.8;
+	background-color: black;	
+	scroll-behavior:smooth;
+}
+
+th {
+	text-align:left;
+	width:150px;
+}
+
+td {
+	text-align:right;
+	width:250px;
+}
+
+.w3-top {
+	background-color: black;
+	color:white;
+}
+
+.w3-content p{
+	font-size:22px;
+}
+
+
+.section-holder
+{
+	color:white;
+	background-color:rgba(0,0,0,0.6);
+	font-size: 64px;
+}
+
+.w3-wide {letter-spacing: 10px;}
+.w3-hover-opacity {cursor: pointer;}
+
+
+@media only screen and (max-device-width: 1600px)
+{
+	.section-holder 
+	{
+		font-size: 36px;
+	}
+}
+
+
