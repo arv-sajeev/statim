@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<title> Archive </title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="./assets/css/w3.css">
+<link rel="stylesheet" href="./assets/css/pandoc-hl.css">
+<link rel="stylesheet" href="./assets/css/styles.css">
+<link rel="stylesheet" href="./assets/css/blog-posts.css">
+<link rel="stylesheet" href="./assets/css/tags.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<style>
+
+<!-- XXX To change the bacground pictures just put images in the img directory and update the links in the stylesheet below-->
+
+<!-- Create a Parallax Effect -->
+.bgimg-1, .bgimg-2, .bgimg-3 {
+  background-attachment: fixed;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+
+<!-- Second image (Portfolio) -->
+.bgimg-2 {
+  background-image: url("./assets/img/gokarnagirl.jpg");<!-- XXX Change this bg image if you wanna -->
+  min-height: 300px;
+}
+
+<!-- Turn off parallax scrolling for tablets and phones -->
+@media only screen and (max-device-width: 1600px) {
+  .bgimg-1, .bgimg-2, .bgimg-3 {
+    background-attachment: scroll;
+    min-height: 400px;
+  }
+}
+</style>
+
+
+<body>
+
+	<div class="w3-top">
+	  <div class="w3-bar w3-card w3-animate-top " id="myNavbar">
+	    <a class="w3-bar-item w3-button w3-hover-black w3-hide-medium w3-hide-large w3-right" href="javascript:void(0);" onclick="toggleFunction()" title="Toggle Navigation Menu">
+	      <i class="fa fa-bars"></i>
+	    </a>
+	    <a href="index.html#home" class="w3-bar-item w3-button">HOME</a>
+	    <a href="index.html#about" class="w3-bar-item w3-button w3-hide-small"><i class="fa fa-user"></i> ABOUT</a>
+	    <a href="index.html#blog" class="w3-bar-item w3-button w3-hide-small"><i class="fa fa-pencil"></i> BLOG</a>
+	    <a href="index.html#gallery" class="w3-bar-item w3-button w3-hide-small"><i class="fa fa-camera"></i>Gallery</a>
+	    <a href="index.html#" class="w3-bar-item w3-button w3-hide-small w3-right w3-hover-red"><i class="fa fa-bars"></i></a>
+	  </div>
+
+	  <!-- Navbar on small screens -->
+	  <div id="navDemo" class="w3-bar-block w3-white w3-hide w3-hide-large w3-hide-medium">
+	    <a href="index.html#about" class="w3-bar-item w3-button" onclick="toggleFunction()">ABOUT</a>
+	    <a href="index.html#blog" class="w3-bar-item w3-button" onclick="toggleFunction()">BLOG</a>
+	    <a href="index.html#gallery" class="w3-bar-item w3-button" onclick="toggleFunction()">GALLERY</a>
+	    <a href="index.html#" class="w3-bar-item w3-button">SEARCH</a>
+	  </div>
+	</div>
+	
+	<!-- Parrallax error -->
+	<div class="bgimg-2 w3-display-container w3-opacity-min" id="blog">
+	  <div class="w3-display-middle" style="white-space:nowrap;">
+		<div class="w3-center w3-padding-large w3-wide section-holder" style="color:white;background-color:rgba(0,0,0,0.6)">
+		    <span class="w3-xxlarge w3-text-white w3-wide">Posts Archive</span>
+		</div>
+	  </div>
+	</div>
+
+	<!-- Grid for posts -->
+	<div class="w3-content w3-container w3-padding-64" >
+	  <h3 class="w3-center">Recent posts</h3>
+
+		<section id="blog-posts" class="blog-section">
+			<div class="blog-grid-container">
+				<div class="blog-grid">
+					STATIMPOSTSGRID
+				</div>
+			</div>
+		</section>
+
+	</div>
+	
+	
+
+	<!-- Footer -->
+	<hr style="width:100%;;color:white">
+	<footer class="w3-center w3-black w3-padding-64 w3-opacity w3-hover-opacity-off">
+	  <a href="#home" class="w3-button w3-light-grey"><i class="fa fa-arrow-up w3-margin-right"></i>To the top</a>
+	      <div class="w3-large w3-margin-bottom">
+		<i class="fa fa-map-marker fa-fw w3-hover-text-black w3-xlarge w3-margin-right"></i> Kerala, India<br>
+		<i class="fa fa-envelope fa-fw w3-hover-text-black w3-xlarge w3-margin-right"></i> Email: arvind.sajeev@gmail.com<br>
+	      </div>
+	  <div class="w3-xlarge w3-section">
+			<!-- XXX Change these as well -->
+			<a href="https://github.com/arv-sajeev"><i class="fa fa-github-alt fa-1g"></i></a>
+			<a href="https://www.linkedin.com/in/arvind-sajeev/"><i class="fa fa-linkedin-square fa-1g"></i></a>
+			<a href="mailto: arvind.sajeev@gmail.com"><i class="fa fa-google fa-1g"></i></a>
+			<a href="https://www.flickr.com/people/160902405@N03/"><i class="fa fa-flickr fa-1g"></i></a>
+	  </div>
+	  <p>Powered by <a href="https://www.w3schools.com/w3css/default.asp" title="W3.CSS" target="_blank" class="w3-hover-text-green">w3.css</a> and 
+	<a href="https://github.com/arv-sajeev/statim" title="statim - lightweight static sites" target="_blank" class="w3-hover-text-green">statim</a>	
+	  </p>
+	</footer>
+</body>
+<script src="../../assets/js/ui_scripts.js"></script>
+</html>

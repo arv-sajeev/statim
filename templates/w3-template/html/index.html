@@ -15,9 +15,7 @@
 
 <style>
 
-<!-- XXX To change the bacground pictures just put images in the img directory and update the links in the stylesheet below-->
 
-/* Create a Parallax Effect */
 .bgimg-1, .bgimg-2, .bgimg-3 {
   background-attachment: fixed;
   background-position: center;
@@ -25,24 +23,21 @@
   background-size: cover;
 }
 
-/* First image (Logo. Full height) */
 .bgimg-1 {
-  background-image: url('./assets/img/chunchi_waterfall.jpg');	<!-- XXX Change this bg image if you wanna -->
+  background-image: url('./assets/img/chunchi_waterfall.jpg');	
   min-height: 100%;
 }
 
-/* Second image (Portfolio) */
 .bgimg-2 {
-  background-image: url("./assets/img/gokarnagirl.jpg");<!-- XXX Change this bg image if you wanna -->
+  background-image: url("./assets/img/gokarnagirl.jpg");
   min-height: 300px;
 }
 
-/* Third image (Contact) */
 .bgimg-3 {
-  background-image: url("./assets/img/women.jpg");<!-- XXX Change this image if you wanna -->
+  background-image: url("./assets/img/women.jpg");
   min-height: 300px;
 }
-/* Turn off parallax scrolling for tablets and phones */
+
 @media only screen and (max-device-width: 1600px) {
   .bgimg-1, .bgimg-2, .bgimg-3 {
     background-attachment: scroll;

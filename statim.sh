@@ -68,6 +68,7 @@ filesetup()
 	cp -vR $template_path/js/   $dir_path/assets/js
 	echo "js resources done"
 	cp -vR $template_path/html/index.html $dir_path/index.html
+	cp -vR $template_path/html/archive.html $dir_path/archive.html
 	echo "PROJ_NAME="$2 > $dir_path/meta.dat
 	echo "TEMPLATE="$3 >> $dir_path/meta.dat
 	echo "Enter your name and press [ENTER]  :: "
@@ -154,6 +155,25 @@ buildall()
 		i=$(($i+1))
 	done
 
+	# Fill up posts archive
+	echo "building archive page"
+	all_posts=""
+	k=1
+	for post in $(ls -t src)
+	do 
+		source $proj_dir/src/$post/meta.dat
+		echo " creating archive entry"$post
+		post_element=$(perl -s -p -e's/STATIMPOSTNAME/$name/g,s/STATIMPOSTDATE/$date/g,s/STATIMPOSTNUMBER/$num/g,s/STATIMPOSTDES/$des/g,s/STATIMPOSTTAGLIST/$tags/g' -- -name="$POST_NAME" -date="$DATE" -num="$k" -des="$DESC" -tags="$TAGS" ./assets/html/post-link.html)
+		all_posts=$all_posts$post_element
+		k=$(($k+1))
+	done
+	git rm -f archive.html
+	archive_page=$(perl -s -p -e's/STATIMPOSTSGRID/$to/g' -- -to="$all_posts" ./assets/html/archive.html)
+	echo "Built archive page"
+	echo $archive_page > archive.html
+	git add archive.html
+	
+
 	# Populate the recent posts in front page
 	echo "building index page"
 	recent_posts=""
@@ -163,7 +183,6 @@ buildall()
 		source $proj_dir/src/$post/meta.dat
 		echo "	creating index entry "$post
 		post_element=$(perl -s -p -e's/STATIMPOSTNAME/$name/g,s/STATIMPOSTDATE/$date/g,s/STATIMPOSTNUMBER/$num/g,s/STATIMPOSTDES/$des/g,s/STATIMPOSTTAGLIST/$tags/g' -- -name="$POST_NAME" -date="$DATE" -num="$j" -des="$DESC" -tags="$TAGS" ./assets/html/post-link.html)
-		echo "$post_element"
 		recent_posts=$recent_posts$post_element
 		j=$(($j+1))
 	done
@@ -172,8 +191,6 @@ buildall()
 	echo $index_page > ./index.html
 	git add ./index.html
 	echo "##### BUILD COMPLETE #####"
-	
-	
 }
 
 ##########################################################################
