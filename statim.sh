@@ -93,8 +93,9 @@ postsetup()
 	local proj_dir=$1
 	local post_name=$2
 	source $proj_dir/meta.dat
-	if [ -d $proj_dir/$post_name ]; then
+	if [ -d $proj_dir/src/$post_name ]; then
 		echo "Existing file name" 
+		echo "Statim requires you to use unique filenames for each post"
 		exit 1
 	fi
 	mkdir $proj_dir/src/$post_name
@@ -143,11 +144,15 @@ buildall()
 	if [ -z "$(ls -A ./build)" ];
 	then 
 		echo "First build"
+		mkdir ./build/tags
 	else
 		git rm -rf ./build
+		git rm -rf ./build/tags
 	fi
-	# Counter for which post we are on just using this for passing next and previous links
-	i=1
+
+	i=2
+	
+	## Build each post
 	for post in $(ls -t src)
 	do
 		next_post=$(ls -t src | awk "NR==$i")
@@ -155,13 +160,30 @@ buildall()
 		i=$(($i+1))
 	done
 
-	# Fill up posts archive
+	## Build index and archive pages
+	buildarchive
+	buildindex
+
+	## Build tag directory structure and tag pages
+	for tag in $(ls -t ./src/.tags)
+	do 
+		buildtag $tag
+	done
+
+	echo "##### BUILD COMPLETE #####"
+}
+
+###################################################
+## Build archive page using details of each post ## 
+###################################################
+buildarchive()
+{
 	echo "building archive page"
 	all_posts=""
 	k=1
 	for post in $(ls -t src)
 	do 
-		source $proj_dir/src/$post/meta.dat
+		source ./src/$post/meta.dat
 		echo " creating archive entry"$post
 		post_element=$(perl -s -p -e's/STATIMPOSTNAME/$name/g,s/STATIMPOSTDATE/$date/g,s/STATIMPOSTNUMBER/$num/g,s/STATIMPOSTDES/$des/g,s/STATIMPOSTTAGLIST/$tags/g' -- -name="$POST_NAME" -date="$DATE" -num="$k" -des="$DESC" -tags="$TAGS" ./assets/html/post-link.html)
 		all_posts=$all_posts$post_element
@@ -169,12 +191,19 @@ buildall()
 	done
 	git rm -f archive.html
 	archive_page=$(perl -s -p -e's/STATIMPOSTSGRID/$to/g' -- -to="$all_posts" ./assets/html/archive.html)
-	echo "Built archive page"
 	echo $archive_page > archive.html
-	git add archive.html
-	
+	git add ./archive.html
+	echo "archive page build complete"
+}
 
-	# Populate the recent posts in front page
+###########################################################
+## Build index page with index template and recent posts ##
+###########################################################
+buildindex()
+{
+	###########################################
+	# Populate the recent posts in front page #
+	###########################################
 	echo "building index page"
 	recent_posts=""
 	j=1
@@ -186,11 +215,44 @@ buildall()
 		recent_posts=$recent_posts$post_element
 		j=$(($j+1))
 	done
+	########################
+	# Fill up the tag list #
+	########################
+	echo "filling tag list"
+	tagstring=""
+	for tag in $(ls -t ./src/.tags )
+	do 
+			tag_element=$(perl -s -p -e's/STATIMTAGNAME/$to/g' -- -to="$tag" ./assets/html/index-tag-link.html)
+			tagstring=$tagstring$tag_element
+	done
 	git rm -f index.html
-	index_page=$(perl -s -p -e's/STATIMPOSTSGRID/$to/g' -- -to="$recent_posts" ./assets/html/index.html)
+	index_page=$(perl -s -p -e's/STATIMPOSTSGRID/$to/g,s/STATIMPOSTTAGLINKS/$tags/g' -- -to="$recent_posts" -tags="$tagstring" ./assets/html/index.html)
 	echo $index_page > ./index.html
 	git add ./index.html
-	echo "##### BUILD COMPLETE #####"
+	echo "index page build complete"
+
+}
+
+###################################################################
+## Build the tag page for given tag with links and desc of posts ##
+###################################################################
+buildtag()
+{
+	local tag=$1
+	all_posts=""
+	k=1
+	for post in $(cat ./src/.tags/$tag)
+	do
+		source ./src/$post/meta.dat
+		echo " creating archive entry"$post
+		post_element=$(perl -s -p -e's/STATIMPOSTNAME/$name/g,s/STATIMPOSTDATE/$date/g,s/STATIMPOSTNUMBER/$num/g,s/STATIMPOSTDES/$des/g,s/STATIMPOSTTAGLIST/$tags/g' -- -name="$POST_NAME" -date="$DATE" -num="$k" -des="$DESC" -tags="$TAGS" ./assets/html/post-tag-link.html)
+		all_posts=$all_posts$post_element
+		k=$(($k+1))
+	done
+	archive_page=$(perl -s -p -e's/STATIMPOSTSGRID/$to/g,s/STATIMTAGNAME/$tag/g' -- -to="$all_posts" -tag="$tag" ./assets/html/tag-index.html)
+	echo $archive_page > ./build/tags/$tag.html
+	git add ./build/tags/$tag.html
+	echo "tag build complete"
 }
 
 ##########################################################################
@@ -209,15 +271,27 @@ buildpost()
 
 	# Generate html for tags
 	tagstring=""
-	for tag in $TAGS:
+	for tag in $TAGS
 	do 
 			tag_element=$(perl -s -p -e's/STATIMTAGNAME/$to/g' -- -to="$tag" ./assets/html/tag-link.html)
 			tagstring=$tagstring$tag_element
 	done
+
+	# Generate next post link
+	if [ -z $next_post ]
+	then
+		next_post_link="../../index.html"	
+		next_post="HOME"
+	else
+		next_post_link="../../build/"$next_post"/$next_post.html"	
+	fi
+	next_link=$(perl -s -p -e's/STATIMNEXTLINK/$link/g,s/STATIMNEXTNAME/$name/g' -- -link="$next_post_link" -name="$next_post" ./assets/html/next-post.html)
+	echo "built next link for :: "$post_name " :: "$next_post
+
+	
 	
 	# Use perl regex to fill up our template with generated content
-	built_page=$(perl -s -p -e's/STATIMTITLE/$title/g,s/STATIMPOSTCONTENT/$content/g,s/STATIMPOSTTAGLINKS/$tags/g' -- -title="$post_name" -content="$html_content" -tags="$tagstring" ./assets/html/post.html)
-	
+	built_page=$(perl -s -p -e's/STATIMTITLE/$title/g,s/STATIMPOSTCONTENT/$content/g,s/STATIMPOSTTAGLINKS/$tags/g,s/STATIMNEXT/$next/g' -- -title="$post_name" -content="$html_content" -tags="$tagstring" -next="$next_link" ./assets/html/post.html)	
 	mkdir build/$post_name
 	echo $built_page > ./build/$post_name/$post_name.html
 	cp -r $post_dir/img ./build/$post_name/img

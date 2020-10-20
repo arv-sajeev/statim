@@ -30,6 +30,7 @@
 
 .blog-post
 {
+	max-width: 400px;
 	background-color:rgba(36,240,0,0.1);
 	border-color:green;
 	border-style: solid;
