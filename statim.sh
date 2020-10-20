@@ -165,6 +165,7 @@ buildall()
 	buildindex
 
 	## Build tag directory structure and tag pages
+	mkdir ./build/tags
 	for tag in $(ls -t ./src/.tags)
 	do 
 		buildtag $tag
@@ -297,6 +298,21 @@ buildpost()
 	cp -r $post_dir/img ./build/$post_name/img
 	git add ./build/$post_name
 	echo "built post :: "$post_name
+}
+
+commit()
+{
+	if [ -z $GIT_REMOTE ]
+	then 
+		echo "Enter git remote url"
+		read remote
+		echo "GIT_REMOTE=\""$remote"\"" >> ./meta.dat
+		git remote add github $remote
+	else
+		echo "Using default directory :: "$GIT_REMOTE
+	fi
+	git commit
+	git push github master
 }
 
 
@@ -433,6 +449,38 @@ case "$subcommand" in
 		if [ -f $dest/meta.dat ]; then
 			buildall $dest
 		else 
+			echo "Use statim new in project directory or specify path using -d flag"
+			usage
+			exit 1
+		fi
+		exit 0
+		;;
+	commit)
+		while getopts "d:" opt; do
+			case ${opt} in
+				d ) 
+					dest=$OPTARG
+					echo "Project directory path specified :: "$dest
+					;;
+				\? )
+					echo "Invalid option -$OPTARG"
+					usage
+					exit 1
+					;;
+				: )
+					echo "Invalid option -$OPTARG requires argument"
+					usage
+					exit 1
+					;;
+			esac
+		done
+		shift $((OPTIND -1))
+		if [ -f $dest/meta.dat ]; then
+			cd $dest
+			source ./meta.dat
+			commit
+		else 
+			echo "Use statim new in project directory or specify path using -d flag"
 			usage
 			exit 1
 		fi
