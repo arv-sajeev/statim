@@ -12,10 +12,11 @@ usage()
 	echo "		statim -h			Display usage info.		"	
 	echo
 	echo "SUBCOMMANDS								"
-	echo "		statim ls								Display available templates	"
-	echo "		statim init  [-d] <target-dir> [-t] <template-name> <blog-dir-name>	set up new blog directory.	"
+	echo "		statim ls											Display available templates	"
+	echo "		statim init  [-d] <target-dir> [-t] <template-name> <blog-dir-name>				set up new blog directory.	"
 	echo "		statim new   [-d] <path-to-project-dir> [-t] <tags in a string> <new-post-name>			create new blog post		"
-	echo "		build									build and commit changes	"
+	echo "		statim build											build and commit changes	"
+	echo " 		statim tags [-d] <target-dir>									list the existing tags in your project"
 	echo
 	echo
 }
@@ -192,7 +193,7 @@ buildarchive()
 	done
 	git rm -f archive.html
 	archive_page=$(perl -s -p -e's/STATIMPOSTSGRID/$to/g' -- -to="$all_posts" ./assets/html/archive.html)
-	echo $archive_page > archive.html
+	echo "$archive_page" > archive.html
 	git add ./archive.html
 	echo "archive page build complete"
 }
@@ -221,14 +222,14 @@ buildindex()
 	########################
 	echo "filling tag list"
 	tagstring=""
-	for tag in $(ls -t ./src/.tags )
+	for tag in $(ls -t ./src/.tags | head -5)
 	do 
 			tag_element=$(perl -s -p -e's/STATIMTAGNAME/$to/g' -- -to="$tag" ./assets/html/index-tag-link.html)
 			tagstring=$tagstring$tag_element
 	done
 	git rm -f index.html
 	index_page=$(perl -s -p -e's/STATIMPOSTSGRID/$to/g,s/STATIMPOSTTAGLINKS/$tags/g' -- -to="$recent_posts" -tags="$tagstring" ./assets/html/index.html)
-	echo $index_page > ./index.html
+	echo "$index_page" > ./index.html
 	git add ./index.html
 	echo "index page build complete"
 
@@ -251,7 +252,7 @@ buildtag()
 		k=$(($k+1))
 	done
 	archive_page=$(perl -s -p -e's/STATIMPOSTSGRID/$to/g,s/STATIMTAGNAME/$tag/g' -- -to="$all_posts" -tag="$tag" ./assets/html/tag-index.html)
-	echo $archive_page > ./build/tags/$tag.html
+	echo "$archive_page" > ./build/tags/$tag.html
 	git add ./build/tags/$tag.html
 	echo "tag build complete"
 }
@@ -292,10 +293,12 @@ buildpost()
 	
 	
 	# Use perl regex to fill up our template with generated content
-	built_page=$(perl -s -p -e's/STATIMTITLE/$title/g,s/STATIMPOSTCONTENT/$content/g,s/STATIMPOSTTAGLINKS/$tags/g,s/STATIMNEXT/$next/g' -- -title="$post_name" -content="$html_content" -tags="$tagstring" -next="$next_link" ./assets/html/post.html)	
+	built_page=$(perl -s -p -e's/STATIMTITLE/$title/g,s/STATIMPOSTCONTENT/$content/g,s/STATIMPOSTTAGLINKS/$tags/g,s/STATIMNEXT/$next/g,s/STATIMPOSTDATE/$date/g' -- -title="$post_name" -content="$html_content" -tags="$tagstring" -next="$next_link" -date="$DATE" ./assets/html/post.html)	
 	mkdir build/$post_name
-	echo $built_page > ./build/$post_name/$post_name.html
-	cp -r $post_dir/img ./build/$post_name/img
+	echo "$built_page" > ./build/$post_name/$post_name.html
+	mkdir -p ./build/$post_name/img
+	cp $post_dir/img/* ./build/$post_name/img
+	echo "Copied images from src to build"
 	git add ./build/$post_name
 	echo "built post :: "$post_name
 }
@@ -349,6 +352,37 @@ case "$subcommand" in
 
 	ls )
 		templates
+		exit 0
+		;;
+
+	tags )
+		while getopts "d:" opt; do
+			case ${opt} in
+				d ) 
+					dest=$OPTARG
+					echo "Project directory path specified :: "$dest
+					;;
+				\? )
+					echo "Invalid option -$OPTARG"
+					usage
+					exit 1
+					;;
+				: )
+					echo "Invalid option -$OPTARG requires argument"
+					usage
+					exit 1
+					;;
+			esac
+		done
+		shift $((OPTIND -1))
+		if [ -f $dest/meta.dat ]; then
+			echo "Currently available tag classes in" $dest
+			ls -1 $dest/src/.tags
+		else 
+			echo "Use statim new in project directory or specify path using -d flag"
+			usage
+			exit 1
+		fi
 		exit 0
 		;;
 

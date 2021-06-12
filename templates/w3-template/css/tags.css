@@ -1,5 +1,7 @@
 .tag-list
 {
+	max-width : 100%;
+	height : auto;
 	display:flex;	
 	-webkit-box-align:center;
 	align-items:center;
@@ -51,6 +53,11 @@
 	background-color:rgba(36,209,0,0.3);
 	border-color:white;
 	color:white;
+}
+
+.post-date
+{
+	float:right;
 }
 
 .prev-post

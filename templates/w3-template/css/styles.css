@@ -36,6 +36,12 @@ td {
 	font-size: 64px;
 }
 
+img {
+	max-width: 100%;
+	height : auto;
+}
+
+
 .w3-wide {letter-spacing: 10px;}
 .w3-hover-opacity {cursor: pointer;}
 
